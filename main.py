@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 app = FastAPI(
     title="Task API",
@@ -6,18 +6,43 @@ app = FastAPI(
     version="1.0"
 )
 
-@app.get("/", summary="API Information")
+# In-memory task list
+tasks = [
+    {"id": 1, "title": "Learn FastAPI", "completed": False},
+    {"id": 2, "title": "Build CRUD API", "completed": False},
+    {"id": 3, "title": "Submit FlyRank Assignment", "completed": False}
+]
+
+
+@app.get("/")
 def root():
     return {
         "name": "Task API",
         "version": "1.0",
-        "endpoints": [
-            "/tasks"
-        ]
+        "endpoints": ["/tasks"]
     }
 
-@app.get("/health", summary="Health Check")
+
+@app.get("/health")
 def health():
     return {
         "status": "ok"
     }
+
+
+@app.get("/tasks")
+def get_tasks():
+    return tasks
+
+
+@app.get("/tasks/{task_id}")
+def get_task(task_id: int):
+
+    for task in tasks:
+        if task["id"] == task_id:
+            return task
+
+    raise HTTPException(
+        status_code=404,
+        detail="Task not found"
+    )
