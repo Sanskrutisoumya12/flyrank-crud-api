@@ -64,3 +64,17 @@ def create_task(task: Task):
     tasks.append(new_task)
 
     return new_task
+
+@app.put("/tasks/{task_id}")
+def update_task(task_id: int, updated_task: Task):
+
+    for task in tasks:
+        if task["id"] == task_id:
+            task["title"] = updated_task.title
+            task["completed"] = updated_task.completed
+            return task
+
+    raise HTTPException(
+        status_code=404,
+        detail="Task not found"
+    )
