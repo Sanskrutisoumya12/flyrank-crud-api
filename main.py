@@ -40,6 +40,7 @@ def get_tasks():
     with Session(engine) as session:
         tasks = session.exec(select(Task)).all()
         return tasks
+    
 
 
 @app.get("/tasks/{task_id}")
