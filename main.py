@@ -57,16 +57,12 @@ def get_task(task_id: int):
 
 @app.post("/tasks", status_code=201)
 def create_task(task: Task):
+    with Session(engine) as session:
+        session.add(task)
+        session.commit()
+        session.refresh(task)
 
-    new_task = {
-        "id": len(tasks) + 1,
-        "title": task.title,
-        "completed": task.completed
-    }
-
-    tasks.append(new_task)
-
-    return new_task
+        return task
 
 @app.put("/tasks/{task_id}")
 def update_task(task_id: int, updated_task: Task):
