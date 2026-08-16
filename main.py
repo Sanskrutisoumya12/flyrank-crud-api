@@ -1,22 +1,23 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from sqlmodel import Session, select
+
+from database import create_db_and_tables, engine
+from models import Task
+
 
 app = FastAPI(
     title="Task API",
     description="A simple CRUD API for managing tasks",
     version="1.0"
 )
-class Task(BaseModel):
-    title: str
-    completed: bool = False
+@app.on_event("startup")
+def on_startup():
+    create_db_and_tables()
+
+
 
     
 # In-memory task list
-tasks = [
-    {"id": 1, "title": "Learn FastAPI", "completed": False},
-    {"id": 2, "title": "Build CRUD API", "completed": False},
-    {"id": 3, "title": "Submit FlyRank Assignment", "completed": False}
-]
 
 
 @app.get("/")
@@ -34,23 +35,25 @@ def health():
         "status": "ok"
     }
 
-
 @app.get("/tasks")
 def get_tasks():
-    return tasks
+    with Session(engine) as session:
+        tasks = session.exec(select(Task)).all()
+        return tasks
 
 
 @app.get("/tasks/{task_id}")
 def get_task(task_id: int):
+    with Session(engine) as session:
+        task = session.get(Task, task_id)
 
-    for task in tasks:
-        if task["id"] == task_id:
-            return task
+        if not task:
+            raise HTTPException(
+                status_code=404,
+                detail="Task not found"
+            )
 
-    raise HTTPException(
-        status_code=404,
-        detail="Task not found"
-    )
+        return task
 
 @app.post("/tasks", status_code=201)
 def create_task(task: Task):
